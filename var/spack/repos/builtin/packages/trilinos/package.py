@@ -147,6 +147,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     variant("stratimikos", default=False, description="Compile with Stratimikos")
     variant("teko", default=False, description="Compile with Teko")
     variant("tempus", default=False, description="Compile with Tempus")
+    variant("testing", default=False, description="Enable testing")
     variant("thyra", default=False, description="Compile with Thyra")
     variant("tpetra", default=True, description="Compile with Tpetra")
     variant("trilinoscouplings", default=False, description="Compile with TrilinosCouplings")
@@ -574,7 +575,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 define_trilinos_enable("DEBUG", "debug"),
                 define_trilinos_enable("EXAMPLES", False),
                 define_trilinos_enable("SECONDARY_TESTED_CODE", True),
-                define_trilinos_enable("TESTS", False),
                 define_trilinos_enable("Fortran"),
                 define_trilinos_enable("OpenMP"),
                 define_trilinos_enable(
@@ -582,6 +582,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
                 ),
             ]
         )
+
+        if "+testing" in spec:
+            options.append(define_trilinos_enable("TESTS", True))
+            options.append(define("BUILD_TESTING", True))
+        else:
+            options.append(define_trilinos_enable("TESTS", False))
 
         if spec.version >= Version("13"):
             options.append(define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
@@ -927,6 +933,15 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             options.append(define("CMAKE_INSTALL_NAME_DIR", self.prefix.lib))
 
         return options
+
+    @run_after("build")
+    def run_check(self):
+        if "+testing" in self.spec:
+            import logging
+
+            logging.basicConfig()
+            logging.critical("Running builder.check()")
+            self.builder.check()
 
     @run_after("install")
     def filter_python(self):
