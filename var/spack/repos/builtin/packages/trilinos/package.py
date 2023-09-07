@@ -934,15 +934,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
         return options
 
-    @run_after("build")
-    def run_check(self):
-        if "+testing" in self.spec:
-            import logging
-
-            logging.basicConfig()
-            logging.critical("Running builder.check()")
-            self.builder.check()
-
     @run_after("install")
     def filter_python(self):
         # When trilinos is built with Python, libpytrilinos is included
